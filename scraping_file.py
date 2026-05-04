@@ -8,7 +8,7 @@ async def main():
     scraper = GoogleMapsScraper()
     
     # Categorías para hacer un scraping grande
-    categorias = ["pizzerías", "cafeterías", "veterinarias", "gimnasios"]
+    categorias = ["pizzerías", "cafeterías", "hamburgueserías","restaurantes"]
     locales_por_categoria = 10
     
     try:
