@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     proxy_user: str | None = None
     proxy_pass: str | None = None
     
+    # Parámetros del scraper configurables desde .env
+    search_query: str = "pizzerías"
+    max_results: int = 5
+    
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 settings = Settings()
