@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
 
 class PlaceExtract(BaseModel):
-    """Modelo de dominio para los datos extraídos (alineado con la BD)."""
+    """Modelo de dominio para los datos extraídos"""
     place_id: str
     name: str
     type: Optional[str] = None

@@ -48,7 +48,8 @@ class PlaceParser:
                     if match_rating:
                         rating = float(match_rating.group(1).replace(',', '.'))
                         
-                    match_reviews = re.search(r'([\d.,]+)\s*reseña', rating_text, re.IGNORECASE)
+                    # Google maps puede usar múltiples terminologías: reseña, reseñas, opiniones, reviews
+                    match_reviews = re.search(r'([\d.,]+)\s*(?:reseña|reseñas|opinión|opiniones|review)', rating_text, re.IGNORECASE)
                     if match_reviews:
                         rev_str = match_reviews.group(1).replace('.', '').replace(',', '')
                         number_reviews = int(rev_str)
@@ -181,9 +182,10 @@ class PlaceParser:
             # Convertimos si o si los precios a float si existen para que SQL no de error
             try:
                 if price_range_min:
-                    price_range_min = float(price_range_min.replace(',', '.'))
+                    # Eliminamos el punto de miles (ej: 10.000 -> 10000) y reemplazamos coma decimal
+                    price_range_min = float(price_range_min.replace('.', '').replace(',', '.'))
                 if price_range_max:
-                    price_range_max = float(price_range_max.replace(',', '.'))
+                    price_range_max = float(price_range_max.replace('.', '').replace(',', '.'))
             except ValueError:
                 price_range_min = None
                 price_range_max = None
@@ -192,15 +194,15 @@ class PlaceParser:
                 "place_id": place_id,
                 "name": name,
                 "lat": lat,
-                "lon": lng,  # << UML dice lon en lugar de lng
-                "distance_to_target": None,  # << Placeholder para completarlo en Engine
+                "lon": lng,  
+                "distance_to_target": None,  
                 "address": address,
                 "avrg_rating": rating,
                 "number_reviews": number_reviews,
                 "price_range_min": price_range_min,
                 "price_range_max": price_range_max,
                 "type": place_type,
-                "phone": phone, # << UML dice phone
+                "phone": phone, 
                 "web_page": website,
                 "social_network": social_network,
                 "opening_hours": opening_hours,

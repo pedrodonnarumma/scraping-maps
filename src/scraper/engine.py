@@ -40,8 +40,7 @@ class GoogleMapsScraper:
         logger.info("Iniciando Playwright engine...")
         self.playwright = await async_playwright().start()
         
-        # Lanzamos Chromium. headless=False es útil para debuggear y ver qué pasa.
-        # En producción debería ser True.
+        # Lanzamos Chromium.
         self.browser = await self.playwright.chromium.launch(headless=False)
         
         # Configuramos el contexto simulando un usuario real
@@ -108,15 +107,15 @@ class GoogleMapsScraper:
                 if href and href not in locales_procesados:
                     locales_procesados.add(href)
                     
-                    # CAPTURAMOS EL NOMBRE ANTES DE HACER CLICK (El aria-label no miente)
+                    # CAPTURAMOS EL NOMBRE ANTES DE HACER CLICK
                     nombre_local = await enlace.get_attribute("aria-label") or ""
                     logger.info(f"Procesando el resultado {index + 1}: {nombre_local}")
                     
-                    # 1 y 2. Clickeamos el local y extraemos sus detalles aplicando una humilde Retry Policy
+                    # Clickeamos el local y extraemos sus detalles
                     details = None
                     for attempt in range(3):
                         try:
-                            await enlace.click(timeout=8000)
+                            await enlace.click(timeout=settings.element_timeout_ms)
                             details = await PlaceParser.extract_details(self.page, href, nombre_local)
                             if details:
                                 break
@@ -125,7 +124,7 @@ class GoogleMapsScraper:
                             await asyncio.sleep(1.5)
                             
                     if details:
-                        # Validación contra locales duplicados renderizados en el feed (stale elements o paginación redundante de maps)
+                        # Validación contra locales duplicados renderizados en el feed 
                         place_id = details.get("place_id")
                         if place_id and place_id in self._processed_place_ids:
                             logger.info(f"Local omitido por ser duplicado repetido en esta corrida: {nombre_local}")
@@ -145,7 +144,7 @@ class GoogleMapsScraper:
                         
                         if plat is not None and plng is not None:
                             dist = calculate_distance(settings.start_lat, settings.start_lng, plat, plng)
-                            if dist <= 5.0:
+                            if dist <= settings.max_distance_km:
                                 details["distance_to_target"] = round(dist, 2)
                                 extracted_data.append(details)
                                 
@@ -168,7 +167,7 @@ class GoogleMapsScraper:
                                     logger.error(f"Falla de validación en {nombre_local}: {e}")
 
                             else:
-                                logger.warning(f"Local descartado: {nombre_local} está a {round(dist, 2)}km (> 5km).")
+                                logger.warning(f"Local descartado: {nombre_local} está a {round(dist, 2)}km (> {settings.max_distance_km}km).")
                         else:
                             # Lo guardamos asumiendo que el search query nos trajo algo cercano
                             logger.warning(f"Coords faltantes {nombre_local}. Guardado.")
@@ -190,7 +189,7 @@ class GoogleMapsScraper:
                             except Exception as e:
                                 logger.error(f"Falla insert {nombre_local} en BD: {e}")
                         
-                    # 3. Volvemos al panel de resultados
+                   
                     await self._go_back_to_search()
             
             index += 1
@@ -276,8 +275,6 @@ class GoogleMapsScraper:
 # Funcionalidad de prueba aislada
 async def test_scraper():
     scraper = GoogleMapsScraper()
-    # Cumpliendo con los requerimientos: de 20 a 40 locales en total.
-    # Usaremos 5 categorías x 6 locales = hasta 30 locales únicos en total.
     queries = ["cafés", "restaurantes", "hamburgueserías", "pizzerías", "locales de pastas"]
     target_per_query = 6 
     

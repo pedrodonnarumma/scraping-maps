@@ -9,9 +9,13 @@ class Settings(BaseSettings):
     proxy_user: str | None = None
     proxy_pass: str | None = None
     
-    # Parámetros del scraper configurables desde .env
-    search_query: str = "pizzerías"
-    max_results: int = 5
+    # Configuramos la lista de rubros/categorías que se extraerán en ráfaga 
+    search_categories: list[str] = ["restaurantes", "heladerías", "pizzerías", "hamburgueserías", "cafeterías"]
+    max_results_per_category: int = 14
+    
+    # Umbrales y límites configurables
+    max_distance_km: float = 5.0
+    element_timeout_ms: int = 10000
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
